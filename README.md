@@ -104,9 +104,13 @@ src/
 
 3. Create a .env file in the root directory and add the following variables:
    ```bash
-   PORT=3000
-   JWT_SECRET=your_secret_key
-   DATABASE_URL=your_database_url
+    PORT=3000
+    ENVIRONMENT=development
+    MONGO_DB_URL=mongodb://localhost:27017
+    MONGO_DATABASE=CleanArchitectureDev?authSource=admin
+    JWT_SECRET=my_super_secret_key
+    JWT_EXPIRES_IN=24h
+
 
 ---
 
