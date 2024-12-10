@@ -1,5 +1,4 @@
 import { inject, injectable } from "inversify";
-import { GetUserByUsername } from "../../use-cases/user/get-user-byusername.usercase";
 import { LoginUserDto } from "../dtos/auth/login.dto";
 import { Request, Response } from 'express';
 import { LoginUserUseCase } from "../../use-cases/auth/login-user.usecase";
@@ -23,7 +22,7 @@ export class AuthController extends BaseController {
 
     }
 
-    register = (req: Request, res: Response) => {
+    register = async (req: Request, res: Response): Promise<void> => {
         if (!req.body)
             res.status(400).json({ message: 'No data provided' });
 
@@ -43,24 +42,33 @@ export class AuthController extends BaseController {
     }
 
 
-    login = (req: Request, res: Response) => {
-        if (!req.body)
+    login = async (req: Request, res: Response): Promise<void> => {
+        if (!req.body) {
             res.status(400).json({ message: 'No data provided' });
-
-        const result = LoginUserDto.create(req.body);
-
-        if (result.errors.length > 0) res.status(400).json(result.errors);
-
-        if (!result.dto) res.status(500).json({ message: 'Internal server error' });
-        else {
-            const dto = result.dto;
-            this.loginByUsername.execute(dto).then((token) => {
-                res.status(200).json(token);
-            }).catch((error) => {
-                this.ErroStatus(error, res);
-            });
+            return;
         }
-    }
+    
+        const result = LoginUserDto.create(req.body);
+    
+        if (result.errors.length > 0) {
+            res.status(400).json(result.errors);
+            return;
+        }
+    
+        if (!result.dto) {
+            res.status(500).json({ message: 'Internal server error' });
+            return;
+        }
+    
+        const dto = result.dto;
+    
+        try {
+            const result = await this.loginByUsername.execute(dto);
+            res.status(200).json({ token: result.token, user: result.user });
+        } catch (error) {
+            this.ErroStatus(error, res);
+        }
+    };
 
 
 }

@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
+import { toJSONTransform } from '../../domain/helpers/mongo.tojson';
 interface IUser extends Document {
     id: string;
     username: string;
@@ -14,14 +15,8 @@ const userSchema: Schema = new Schema<IUser>({
     password: { type: String, required: true },
 })
 
-// `toJSON` ile `_id` alanını `id` olarak yeniden adlandırıyoruz ve `__v` gibi gereksiz alanları kaldırıyoruz.
-userSchema.set('toJSON', {
-    transform: (doc, ret) => {
-        ret.id = ret._id; // `_id` değerini `id` olarak atıyoruz
-        delete ret._id;   // `_id` alanını kaldırıyoruz
-        delete ret.__v;   // Mongoose tarafından eklenen `__v` alanını kaldırıyoruz
-    },
-});
+// ToJsonForId
+userSchema.set('toJSON', toJSONTransform());
 
 const UserModel = mongoose.model<IUser>('User', userSchema);
 
