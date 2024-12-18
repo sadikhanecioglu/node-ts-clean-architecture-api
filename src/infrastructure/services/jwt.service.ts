@@ -15,7 +15,9 @@ export class JwtService {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
   }
 
-  static verifyToken(token: string): object | string {
-    return jwt.verify(token, JWT_SECRET);
+  static verifyToken(token: string, callback: (err: any, decoded: any) => void) {
+    return jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      callback(err, decoded);
+    });
   }
 }

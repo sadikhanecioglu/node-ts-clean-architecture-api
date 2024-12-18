@@ -4,14 +4,15 @@ import { inject, injectable } from 'inversify';
 import { Container } from 'inversify';
 import { IUserRepository } from '../../domain/interfaces/user.repository';
 import { USER_TYPES } from '../../container/types/user.types';
+import { JwtService } from '../../infrastructure/services/jwt.service';
 
-interface UserPayload extends JwtPayload {
+export interface UserPayload extends JwtPayload {
     id: string;
-    email: string;
+    username: string;
     // Add any other properties you expect in the payload
 }
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
     user?: UserPayload;
 }
 
@@ -27,19 +28,25 @@ export class AuthorizedMiddleware {
     }
 
     public async authorize(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-        const token = req.headers.authorization;
+        const bearerToken = req.headers.authorization;
 
-        if (!token) {
+        if (!bearerToken) {
             res.status(401).json({ message: 'No token provided' });
         }
 
         try {
-            if (token)
-                jwt.verify(token, process.env.JWT_SECRET as string, (err, decoded) => {
-                    if (err) return res.sendStatus(403);
+            if (bearerToken){
+                const token = bearerToken.split(' ')[1];
+
+                JwtService.verifyToken(token, (err, decoded) => {
+                    if (err)
+                        return res.sendStatus(403);
                     req.user = decoded as UserPayload;
                     next();
                 });
+
+            }
+
         } catch (error) {
             res.status(500).json({ message: 'Internal server error' });
         }
